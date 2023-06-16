@@ -153,21 +153,110 @@ namespace UITesting
             IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
             jsExecutor.ExecuteScript("arguments[0].click();", addToCartButton);
 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(2));
 
             IWebElement showMiniCartCheckoutButton = _driver.FindElement(By.ClassName("minicart-wrapper"));
             showMiniCartCheckoutButton.Click();
 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(2));
 
             IWebElement proceedToCheckoutButton = _driver.FindElement(By.Id("top-cart-btn-checkout"));
             proceedToCheckoutButton.Click();
 
             Thread.Sleep(TimeSpan.FromSeconds(10));
 
-            //cONTINUE WORK HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            /// adding if an address is already saved 
+            /// .//button[contains(span/@data-bind, 'New Address')]
+
+
+            IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
+            IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));            
+            IWebElement streetInput = _driver.FindElement(By.CssSelector("input[name='street[0]']"));
+            IWebElement cityInput = _driver.FindElement(By.CssSelector("input[name='city']"));            
+            IWebElement countryInput = _driver.FindElement(By.CssSelector("select[name='country_id']"));            
+            SelectElement selectCountry = new SelectElement(countryInput);
+            IWebElement zipPostalCodeInput = _driver.FindElement(By.CssSelector("input[name ='postcode']"));
+            IWebElement phoneInput = _driver.FindElement(By.CssSelector("input[name='telephone']"));
+           // IWebElement shippingMethodRadioButton = _driver.FindElement(By.CssSelector("input[type = 'radio']")); ************* Radio Button auto selects
+            IWebElement nextButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Next')]"));            
+
+            firstNameInput.Clear();
+            firstNameInput.SendKeys("Isaac");
+
+            lastNameInput.Clear();
+            lastNameInput.SendKeys("Amortegui");
+
+            streetInput.Clear();
+            streetInput.SendKeys("Spur Road");
+
+            cityInput.Clear();
+            cityInput.SendKeys("London");
+
+            selectCountry.SelectByText("United Kingdom");
+
+            zipPostalCodeInput.Clear();
+            zipPostalCodeInput.SendKeys("SW1A 1AA");
+
+            Random random = new Random();
+            string phoneNumber = "";
+            for (int i = 0; i < 10; i++)
+            {
+                phoneNumber += random.Next(0, 10).ToString();
+            }
+            phoneInput.Clear();            
+            phoneInput.SendKeys(phoneNumber);
+
+            //shippingMethodRadioButton.Click(); ************* Radio Button auto selects
+            nextButton.Click();
+
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
+            IWebElement placeOrderButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Place Order')]"));
+            placeOrderButton.Click();
+
+            IWebElement orderNumberElement = _driver.FindElement(By.CssSelector("a.order-number strong"));
+            string orderNumber = orderNumberElement.Text;
+
+            IWebElement continueShoppingButton = _driver.FindElement(By.XPath(".//a[contains(span/@data-bind, 'Continue Shopping')]"));
+            continueShoppingButton.Click();
+
+            IWebElement customerMenuDropMenu = _driver.FindElement(By.CssSelector("span.customer-name"));
+            customerMenuDropMenu.Click();
+
+            IWebElement myAccountLink = _driver.FindElement(By.XPath(".//a[contains(text(), 'My Account')]"));
+            myAccountLink.Click();
+
+            IWebElement myOrdersLink = _driver.FindElement(By.XPath(".//a[contains(text(), 'My Orders')]"));
+            myOrdersLink.Click();
+
+            IWebElement viewOrderButtonForCreatedOrder = _driver.FindElement(By.XPath($".//td[contains(text(), '{orderNumber}')]/following-sibling::td/a[span[text()='View Order']]"));
+            viewOrderButtonForCreatedOrder.Click();
+
+
+            //Assert
+            IWebElement productName = _driver.FindElement(By.XPath(".//td[@class='col name']/strong"));
+            IWebElement subtotalAmount = _driver.FindElement(By.XPath(".//tr[@class='subtotal']//span"));
+            IWebElement shippingHandlingAmount = _driver.FindElement(By.XPath(".//tr[@class='shipping']//span"));
+            IWebElement grandTotalAmount = _driver.FindElement(By.XPath(".//tr[@class='grand_total']//span"));
+
+            var actualProductName = productName.Text;
+            var actualSubtotalAmount = subtotalAmount.Text;
+            var actualShippingHandlingAmount = shippingHandlingAmount.Text;
+            var actualGrandTotalAmount = grandTotalAmount.Text;
+
+            var expectedProductName = "Dash Digital Watch";
+            var expectedSubtotal = "$92.00";
+            var expectedShippingHandling = "$5.00";
+            var expectedGrandTotal = "$97.00";
+
+            Assert.AreEqual(expectedProductName, actualProductName);
+            Assert.AreEqual(expectedSubtotal, actualSubtotalAmount);
+            Assert.AreEqual(expectedShippingHandling, actualShippingHandlingAmount);
+            Assert.AreEqual(expectedGrandTotal, actualGrandTotalAmount);
+
+
         }
-        
+
 
         [TearDown]
         public void Teardown()

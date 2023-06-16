@@ -163,10 +163,18 @@ namespace UITesting
             IWebElement proceedToCheckoutButton = _driver.FindElement(By.Id("top-cart-btn-checkout"));
             proceedToCheckoutButton.Click();
 
-            Thread.Sleep(TimeSpan.FromSeconds(10));
+            Thread.Sleep(TimeSpan.FromSeconds(5));
 
             /// adding if an address is already saved 
             /// .//button[contains(span/@data-bind, 'New Address')]
+            /// 
+            bool isNewAddressButtonPresent = _driver.FindElements(By.XPath(".//button[contains(span/@data-bind, 'New Address')]")).Count > 0;
+
+            if (isNewAddressButtonPresent)
+            {
+                IWebElement newAddressButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'New Address')]"));
+                newAddressButton.Click();
+            }
 
 
             IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
@@ -178,7 +186,7 @@ namespace UITesting
             IWebElement zipPostalCodeInput = _driver.FindElement(By.CssSelector("input[name ='postcode']"));
             IWebElement phoneInput = _driver.FindElement(By.CssSelector("input[name='telephone']"));
            // IWebElement shippingMethodRadioButton = _driver.FindElement(By.CssSelector("input[type = 'radio']")); ************* Radio Button auto selects
-            IWebElement nextButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Next')]"));            
+                      
 
             firstNameInput.Clear();
             firstNameInput.SendKeys("Isaac");
@@ -207,7 +215,19 @@ namespace UITesting
             phoneInput.SendKeys(phoneNumber);
 
             //shippingMethodRadioButton.Click(); ************* Radio Button auto selects
+
+            bool isShipHereButtonPresent = _driver.FindElements(By.XPath(".//footer//span[contains(text(), 'Ship here')]")).Count > 0;
+
+            if (isShipHereButtonPresent)
+            {
+                IWebElement shipHereButton = _driver.FindElement(By.XPath(".//footer//span[contains(text(), 'Ship here')]"));
+                shipHereButton.Click();
+                
+            }
+            
+            IWebElement nextButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Next')]"));
             nextButton.Click();
+                   
 
             Thread.Sleep(TimeSpan.FromSeconds(5));
 
@@ -217,7 +237,8 @@ namespace UITesting
             IWebElement orderNumberElement = _driver.FindElement(By.CssSelector("a.order-number strong"));
             string orderNumber = orderNumberElement.Text;
 
-            IWebElement continueShoppingButton = _driver.FindElement(By.XPath(".//a[contains(span/@data-bind, 'Continue Shopping')]"));
+            // IWebElement continueShoppingButton = _driver.FindElement(By.XPath(".//a[contains(span/@data-bind, 'Continue Shopping')]")); Maybe not needed
+            IWebElement continueShoppingButton = _driver.FindElement(By.XPath(".//div[@class='primary']//span[contains(text(), 'Continue Shopping')]"));
             continueShoppingButton.Click();
 
             IWebElement customerMenuDropMenu = _driver.FindElement(By.CssSelector("span.customer-name"));

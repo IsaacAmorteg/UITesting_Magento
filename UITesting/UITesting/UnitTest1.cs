@@ -101,7 +101,7 @@ namespace UITesting
             _driver.Navigate().GoToUrl(_gearPageUrl);
 
             //Action
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(1));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(3));
             wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).All(i =>i.Text != string.Empty));
             IEnumerable<IWebElement> productNameCollection = _driver.FindElements(By.ClassName("product-item-link"));
             var actual = productNameCollection.Select(i => i.Text);
@@ -137,6 +137,9 @@ namespace UITesting
 
             signInButtonLoginPage.Click();
 
+            WebDriverWait waitGearButton = new WebDriverWait(_driver, TimeSpan.FromSeconds(3));
+            waitGearButton.Until(ExpectedConditions.ElementExists(By.Id("ui-id-6")));
+
             IWebElement gearButtonDropDownMenu = _driver.FindElement(By.Id("ui-id-6"));
 
             Actions actions = new Actions(_driver);
@@ -153,18 +156,23 @@ namespace UITesting
             IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
             jsExecutor.ExecuteScript("arguments[0].click();", addToCartButton);
 
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            //Keep below Thread Sleep until fixing below Commented Explicit waiter.
+            Thread.Sleep(TimeSpan.FromSeconds(3));
+           // WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
+            //wait.Until(ExpectedConditions.ElementExists(By.ClassName("minicart-wrapper")));
 
             IWebElement showMiniCartCheckoutButton = _driver.FindElement(By.ClassName("minicart-wrapper"));
             showMiniCartCheckoutButton.Click();
 
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            WebDriverWait waitCheckout = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            waitCheckout.Until(ExpectedConditions.ElementToBeClickable(By.Id("top-cart-btn-checkout")));
 
             IWebElement proceedToCheckoutButton = _driver.FindElement(By.Id("top-cart-btn-checkout"));
             proceedToCheckoutButton.Click();
 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
-
+            WebDriverWait waitNext = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+            waitNext.Until(ExpectedConditions.ElementExists(By.XPath(".//button[contains(span/@data-bind, 'Next')]")));
+           
             bool isNewAddressButtonPresent = _driver.FindElements(By.XPath(".//button[contains(span/@data-bind, 'New Address')]")).Count > 0;
 
             if (isNewAddressButtonPresent)
@@ -220,12 +228,17 @@ namespace UITesting
             
             IWebElement nextButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Next')]"));
             nextButton.Click();
-                   
 
+            //Keep below Thread Sleep until fixing below Commented Explicit waiter.
             Thread.Sleep(TimeSpan.FromSeconds(5));
+            //WebDriverWait waitPlaceOrder = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            //waitPlaceOrder.Until(ExpectedConditions.ElementIsVisible(By.XPath(".//button[contains(span/@data-bind, 'Place Order')]")));
 
             IWebElement placeOrderButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Place Order')]"));
             placeOrderButton.Click();
+
+            WebDriverWait waitOrderNumber = new WebDriverWait(_driver, TimeSpan.FromSeconds(3));
+            waitOrderNumber.Until(ExpectedConditions.ElementExists(By.CssSelector("a.order-number strong")));
 
             IWebElement orderNumberElement = _driver.FindElement(By.CssSelector("a.order-number strong"));
             string orderNumber = orderNumberElement.Text;
@@ -268,6 +281,38 @@ namespace UITesting
             Assert.AreEqual(expectedGrandTotal, actualGrandTotalAmount);
 
 
+        }
+
+        [Test]
+        public void Scenario2() 
+        {
+            //Precondition
+            _driver.Navigate().GoToUrl(_baseUrl);
+
+            //Action
+            IWebElement createAnAccountButton = _driver.FindElement(By.XPath(".//li/a[contains(text(), 'Create an Account')]"));
+            createAnAccountButton.Click();
+
+            IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
+            IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));
+            //IWebElement emailInput = _driver.FindElement(By.CssSelector("input[name='email']"));  
+            IWebElement passwordInput = _driver.FindElement(By.CssSelector("input[name = 'password']"));
+            IWebElement passwordConfirmInput = _driver.FindElement(By.CssSelector("input[name='password_confirmation']"));
+            IWebElement createAccountButtonInRegistrationPage = _driver.FindElement(By.CssSelector("button[title='Create an Account']"));
+
+            firstNameInput.SendKeys("Charlie");
+            lastNameInput.SendKeys("Great");
+            passwordInput.SendKeys("Test123Test");
+            passwordConfirmInput.SendKeys("Test123Test");
+            createAccountButtonInRegistrationPage.Click();
+
+            //Assertion
+            var expectedErrorMessage = "This is a required field.";
+            IWebElement errorMessage = _driver.FindElement(By.XPath($".//div[@class='mage-error' and contains(text(), '{expectedErrorMessage}')]"));
+            var actualErrorMessage = errorMessage.Text;
+
+            Assert.AreEqual(expectedErrorMessage, actualErrorMessage);          
+                        
         }
 
 

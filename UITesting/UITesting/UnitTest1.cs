@@ -11,14 +11,18 @@ namespace UITesting
 {
     public class Tests
     {
-        private IWebDriver _driver;
+        [ThreadStatic]
+        private static IWebDriver _driver;
         private readonly string _baseUrl = "https://magento.softwaretestingboard.com/";
         private readonly string _gearPageUrl = "https://magento.softwaretestingboard.com/gear.html";
 
         [SetUp]
         public void Setup()
         {
-            _driver = new ChromeDriver();
+            var options = new ChromeOptions();
+            options.AddArgument("headless");
+
+            _driver = new ChromeDriver(options);
 
             _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(3);
 
@@ -56,7 +60,7 @@ namespace UITesting
 
             var expected = "Welcome, Isaac Amortegui!";
 
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(1));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
             wait.Until(ExpectedConditions.TextToBePresentInElementLocated(By.ClassName("logged-in"), expected));
 
             IWebElement welcomeMessage = _driver.FindElement(By.ClassName("logged-in"));
@@ -101,7 +105,7 @@ namespace UITesting
             _driver.Navigate().GoToUrl(_gearPageUrl);
 
             //Action
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(3));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
             wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).All(i =>i.Text != string.Empty));
             IEnumerable<IWebElement> productNameCollection = _driver.FindElements(By.ClassName("product-item-link"));
             var actual = productNameCollection.Select(i => i.Text);
@@ -295,7 +299,7 @@ namespace UITesting
 
             IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
             IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));
-            //IWebElement emailInput = _driver.FindElement(By.CssSelector("input[name='email']"));  
+           
             IWebElement passwordInput = _driver.FindElement(By.CssSelector("input[name = 'password']"));
             IWebElement passwordConfirmInput = _driver.FindElement(By.CssSelector("input[name='password_confirmation']"));
             IWebElement createAccountButtonInRegistrationPage = _driver.FindElement(By.CssSelector("button[title='Create an Account']"));

@@ -5,8 +5,6 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
-using System.Numerics;
-using System.Xml.Linq;
 using UITesting.Pages;
 
 namespace UITesting.Tests
@@ -17,6 +15,7 @@ namespace UITesting.Tests
         private static IWebDriver _driver;
         private readonly string _baseUrl = "https://magento.softwaretestingboard.com/";
         private readonly string _gearPageUrl = "https://magento.softwaretestingboard.com/gear.html";
+        private static MainPage _mainPage;
 
         [SetUp]
         public void Setup()
@@ -26,9 +25,13 @@ namespace UITesting.Tests
 
             _driver = new ChromeDriver(options);
 
+            _driver.Manage().Window.Maximize();
+
             _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
 
-            _driver.Manage().Window.Maximize();
+            _driver.Navigate().GoToUrl(_baseUrl);            
+
+            _mainPage = new MainPage(_driver);
         }
 
         [TestCase("https://magento.softwaretestingboard.com/", "Home Page")]
@@ -40,8 +43,16 @@ namespace UITesting.Tests
             Assert.AreEqual(expectedTitle, _driver.Title);
 
         }
+        [Test]
+        public void LogoutUser_CheckSignInButtonText_IsSignIn()
+        {           
+            var actual = _mainPage.GetSignInButtonText();
+            var expected = "Sign In";
 
-        [TestCase("https://magento.softwaretestingboard.com/")]
+            Assert.AreEqual(expected, actual);
+
+        }
+                
         [TestCase("https://magento.softwaretestingboard.com/gear.html")]
         public void BasePageOpened_SignIn_WelcomeMessageIsDisplayed(string url)
         {
@@ -50,19 +61,13 @@ namespace UITesting.Tests
 
             //Action
             var mainPage = new MainPage(_driver);
-            mainPage.OpenSignInButton();
+            mainPage.OpenSignInPage();
 
             var loginPage = new LoginPage(_driver);
-            loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
-
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
-
-            wait.Until((driver) => driver.FindElement(By.ClassName("logged-in")).Text.StartsWith("Welcome, "));
-
-            IWebElement welcomeMessage = _driver.FindElement(By.ClassName("logged-in"));
+            loginPage.Login("isaacamortegc@outlook.com", "Boeing787");                            
 
             //Assert
-            var actual = welcomeMessage.Text;
+            var actual = mainPage.GetWelcomeMessage();
             var expected = "Welcome, Isaac Amortegui!";
 
             Assert.AreEqual(expected, actual);
@@ -74,21 +79,16 @@ namespace UITesting.Tests
         public void BasePageOpened_TrySignInWithNoPassword_ErrorMessageIsDisplayed()
         {
             //Precondition
-            _driver.Navigate().GoToUrl(_baseUrl);
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenSignInPage();
 
             //Action
-            var mainPage = new MainPage(_driver);
-            mainPage.OpenSignInButton();
-
             var loginPage = new LoginPage(_driver);
             loginPage.EnterEmail("isaacamortegc@outlook.com");
             loginPage.ClickSignInButtonLogin();
 
-            IWebElement errorMessage = _driver.FindElement(By.ClassName("fieldset"));
-
             //Assert
-
-            var actual = errorMessage.GetAttribute("data-hasrequired");
+            var actual = loginPage.GetErrorMessage();
             var expected = "* Required Fields";
 
             Assert.AreEqual(expected, actual);
@@ -99,19 +99,17 @@ namespace UITesting.Tests
         public void BasePageOpened_SignIn_MainPageNotSignInButton()
         {
             //Precondition
-            _driver.Navigate().GoToUrl(_baseUrl);
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenSignInPage();
 
             //Action
-            var mainPage = new MainPage(_driver);
-            mainPage.OpenSignInButton();
-
             var loginPage = new LoginPage(_driver);
             loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
 
-            var isSignInButtonDisplayedCollection = _driver.FindElements(By.ClassName("authorization-link")).Select(i => i.Displayed);
+            var isSignInButtonDisplayed = mainPage.isSignInButtonDisplayed();
 
             //Assert
-            Assert.IsFalse(isSignInButtonDisplayedCollection.Distinct().Single());
+            Assert.IsFalse(isSignInButtonDisplayed);
 
         }
         [Test]
@@ -120,12 +118,10 @@ namespace UITesting.Tests
             //Precondition
             _driver.Navigate().GoToUrl(_gearPageUrl);
 
+            var productCategoryPage = new ProductCategoryPage(_driver);
+
             //Action
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
-            wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).Count == 4);
-            wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).All(i => i.Text != string.Empty));
-            IEnumerable<IWebElement> productNameCollection = _driver.FindElements(By.ClassName("product-item-link"));
-            var actual = productNameCollection.Select(i => i.Text);
+            var actual = productCategoryPage.GetHotSellersNames();
             var expected = new[]
             {
                 "Fusion Backpack",
@@ -142,147 +138,73 @@ namespace UITesting.Tests
         public void Scenario1()
         {
             //Precondition
-            _driver.Navigate().GoToUrl(_baseUrl);
-
-            //Action
             var mainPage = new MainPage(_driver);
-            mainPage.OpenSignInButton();
+            mainPage.OpenSignInPage();
 
             var loginPage = new LoginPage(_driver);
             loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
 
-            WebDriverWait waitGearButton = new WebDriverWait(_driver, TimeSpan.FromSeconds(3));
-            waitGearButton.Until(ExpectedConditions.ElementExists(By.Id("ui-id-6")));
-
-            IWebElement gearButtonDropDownMenu = _driver.FindElement(By.Id("ui-id-6"));
+            //Action
+            mainPage.MoveToGearDropDownMenu();
 
             Actions actions = new Actions(_driver);
 
-            actions.MoveToElement(gearButtonDropDownMenu).Perform();
+            mainPage.OpenWatchesPageByDropDownMenu();
 
-            IWebElement watchesButtonByGearDropDownMenu = _driver.FindElement(By.XPath(".//a[@id= 'ui-id-27']"));
-            watchesButtonByGearDropDownMenu.Click();
-
-            IWebElement productBox = _driver.FindElement(By.XPath(".//li[@class='item product product-item']//a[contains(text(), 'Dash Digital Watch')]"));
-            actions.MoveToElement(productBox).Build().Perform();
-
-            IWebElement addToCartButton = _driver.FindElement(By.XPath(".//form[@data-product-sku= '24-MG02']/button[@class='action tocart primary']"));
-            IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
-            jsExecutor.ExecuteScript("arguments[0].click();", addToCartButton);
+            var watchesProductPage = new ProductCategoryPage(_driver);
+            watchesProductPage.AddToCartDashDigitalWatchProduct();
 
             //Keep below Thread Sleep until fixing below Commented Explicit waiter.
             Thread.Sleep(TimeSpan.FromSeconds(3));
             // WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
             //wait.Until(ExpectedConditions.ElementExists(By.ClassName("minicart-wrapper")));
 
-            IWebElement showMiniCartCheckoutButton = _driver.FindElement(By.ClassName("minicart-wrapper"));
-            showMiniCartCheckoutButton.Click();
+            watchesProductPage.OpenMiniCart();
 
-            WebDriverWait waitCheckout = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
-            waitCheckout.Until(ExpectedConditions.ElementToBeClickable(By.Id("top-cart-btn-checkout")));
+            watchesProductPage.ProceedToCheckOutFromMiniCart();
 
-            IWebElement proceedToCheckoutButton = _driver.FindElement(By.Id("top-cart-btn-checkout"));
-            proceedToCheckoutButton.Click();
+            var checkoutPage = new CheckoutPage(_driver);
 
-            WebDriverWait waitNext = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+            WebDriverWait waitNext = new WebDriverWait(_driver, TimeSpan.FromSeconds(15));
             waitNext.Until(ExpectedConditions.ElementExists(By.XPath(".//button[contains(span/@data-bind, 'Next')]")));
 
-            bool isNewAddressButtonPresent = _driver.FindElements(By.XPath(".//button[contains(span/@data-bind, 'New Address')]")).Count > 0;
+            checkoutPage.isNewAddressButtonPresentClick();
+            
+            checkoutPage.FillInCheckoutData("Isaac", "Amortegui", "Spur Road", "London", "United Kingdom", "SW1A 1AA", checkoutPage.RandomPhoneNumberCreator());
 
-            if (isNewAddressButtonPresent)
-            {
-                IWebElement newAddressButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'New Address')]"));
-                newAddressButton.Click();
-            }
+            checkoutPage.isShipHereButtonPresentClick();
 
-
-            IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
-            IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));
-            IWebElement streetInput = _driver.FindElement(By.CssSelector("input[name='street[0]']"));
-            IWebElement cityInput = _driver.FindElement(By.CssSelector("input[name='city']"));
-            IWebElement countryInput = _driver.FindElement(By.CssSelector("select[name='country_id']"));
-            SelectElement selectCountry = new SelectElement(countryInput);
-            IWebElement zipPostalCodeInput = _driver.FindElement(By.CssSelector("input[name ='postcode']"));
-            IWebElement phoneInput = _driver.FindElement(By.CssSelector("input[name='telephone']"));
-
-            firstNameInput.Clear();
-            firstNameInput.SendKeys("Isaac");
-
-            lastNameInput.Clear();
-            lastNameInput.SendKeys("Amortegui");
-
-            streetInput.Clear();
-            streetInput.SendKeys("Spur Road");
-
-            cityInput.Clear();
-            cityInput.SendKeys("London");
-
-            selectCountry.SelectByText("United Kingdom");
-
-            zipPostalCodeInput.Clear();
-            zipPostalCodeInput.SendKeys("SW1A 1AA");
-
-            Random random = new Random();
-            string phoneNumber = "";
-            for (int i = 0; i < 10; i++)
-            {
-                phoneNumber += random.Next(0, 10).ToString();
-            }
-            phoneInput.Clear();
-            phoneInput.SendKeys(phoneNumber);
-
-            bool isShipHereButtonPresent = _driver.FindElements(By.XPath(".//footer//span[contains(text(), 'Ship here')]")).Count > 0;
-
-            if (isShipHereButtonPresent)
-            {
-                IWebElement shipHereButton = _driver.FindElement(By.XPath(".//footer//span[contains(text(), 'Ship here')]"));
-                shipHereButton.Click();
-
-            }
-
-            IWebElement nextButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Next')]"));
-            nextButton.Click();
+            checkoutPage.ClickNextToPlaceOrder();
 
             //Keep below Thread Sleep until fixing below Commented Explicit waiter.
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(6));
             //WebDriverWait waitPlaceOrder = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
             //waitPlaceOrder.Until(ExpectedConditions.ElementIsVisible(By.XPath(".//button[contains(span/@data-bind, 'Place Order')]")));
 
-            IWebElement placeOrderButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Place Order')]"));
-            placeOrderButton.Click();
+            checkoutPage.ClickPlaceOrder();
 
-            WebDriverWait waitOrderNumber = new WebDriverWait(_driver, TimeSpan.FromSeconds(3));
-            waitOrderNumber.Until(ExpectedConditions.ElementExists(By.CssSelector("a.order-number strong")));
+            var successPage = new SuccessPage(_driver);
+            var orderNumber = successPage.SaveOrderNumber();
+            successPage.ClickContinueShopping();
 
-            IWebElement orderNumberElement = _driver.FindElement(By.CssSelector("a.order-number strong"));
-            string orderNumber = orderNumberElement.Text;
 
-            IWebElement continueShoppingButton = _driver.FindElement(By.XPath(".//div[@class='primary']//span[contains(text(), 'Continue Shopping')]"));
-            continueShoppingButton.Click();
+            mainPage.OpenCustomerMenuDropDown();
 
-            IWebElement customerMenuDropMenu = _driver.FindElement(By.CssSelector("span.customer-name"));
-            customerMenuDropMenu.Click();
+            mainPage.OpenMyAccountPage();
 
-            IWebElement myAccountLink = _driver.FindElement(By.XPath(".//a[contains(text(), 'My Account')]"));
-            myAccountLink.Click();
+            var myAccountPage = new MyAccountPage(_driver);
 
-            IWebElement myOrdersLink = _driver.FindElement(By.XPath(".//a[contains(text(), 'My Orders')]"));
-            myOrdersLink.Click();
+            myAccountPage.ClickMyOrdersPage();
 
-            IWebElement viewOrderButtonForCreatedOrder = _driver.FindElement(By.XPath($".//td[contains(text(), '{orderNumber}')]/following-sibling::td/a[span[text()='View Order']]"));
-            viewOrderButtonForCreatedOrder.Click();
 
+            myAccountPage.ClickViewOrderByCreatedOrder(orderNumber);
 
             //Assert
-            IWebElement productName = _driver.FindElement(By.XPath(".//td[@class='col name']/strong"));
-            IWebElement subtotalAmount = _driver.FindElement(By.XPath(".//tr[@class='subtotal']//span"));
-            IWebElement shippingHandlingAmount = _driver.FindElement(By.XPath(".//tr[@class='shipping']//span"));
-            IWebElement grandTotalAmount = _driver.FindElement(By.XPath(".//tr[@class='grand_total']//span"));
 
-            var actualProductName = productName.Text;
-            var actualSubtotalAmount = subtotalAmount.Text;
-            var actualShippingHandlingAmount = shippingHandlingAmount.Text;
-            var actualGrandTotalAmount = grandTotalAmount.Text;
+            var actualProductName = myAccountPage.GetProductNameInViewOrder();
+            var actualSubtotalAmount = myAccountPage.GetSubtotalInViewOrder();
+            var actualShippingHandlingAmount = myAccountPage.GetShipphingHandlingInViewOrder();
+            var actualGrandTotalAmount = myAccountPage.GetGrandTotalInViewOrder();
 
             var expectedProductName = "Dash Digital Watch";
             var expectedSubtotal = "$92.00";
@@ -301,12 +223,10 @@ namespace UITesting.Tests
         public void Scenario2()
         {
             //Precondition
-            _driver.Navigate().GoToUrl(_baseUrl);
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenCreateAccountPage();
 
             //Action
-            var mainPage = new MainPage(_driver);
-            mainPage.OpenCreateAccountButton();
-
             IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
             IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));
 

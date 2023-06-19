@@ -7,19 +7,15 @@ using System.Threading.Tasks;
 
 namespace UITesting.Pages
 {
-    internal class LoginPage
+    internal class LoginPage: BasePage
     {
         private By _emailInput = By.Id("email");
         private By _passwordInput = By.Name("login[password]");
         private By _signInButtonLogin = By.Id("send2");
         private By _errorMessage = By.ClassName("fieldset");
-       
-        public IWebDriver Driver;
+     
 
-        public LoginPage(IWebDriver driver)
-        {
-            Driver = driver;
-        }
+        public LoginPage(IWebDriver driver) : base(driver) { }
 
         public void EnterEmail(string email)
         {

@@ -53,10 +53,8 @@ namespace UITesting.Tests
             signInButton.Click();
 
             var loginPage = new LoginPage(_driver);
-            loginPage.EnterEmail("isaacamortegc@outlook.com");
-            loginPage.EnterPassword("Boeing787");
-            loginPage.ClickSignInButtonLogin();                       
-            
+            loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
+
             WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
 
             wait.Until((driver) => driver.FindElement(By.ClassName("logged-in")).Text.StartsWith("Welcome, "));
@@ -84,7 +82,6 @@ namespace UITesting.Tests
 
             var loginPage = new LoginPage(_driver);
             loginPage.EnterEmail("isaacamortegc@outlook.com");
-
             loginPage.ClickSignInButtonLogin();
 
             IWebElement errorMessage = _driver.FindElement(By.ClassName("fieldset"));
@@ -109,9 +106,7 @@ namespace UITesting.Tests
             signInButton.Click();
 
             var loginPage = new LoginPage(_driver);
-            loginPage.EnterEmail("isaacamortegc@outlook.com");
-            loginPage.EnterPassword("Boeing787");
-            loginPage.ClickSignInButtonLogin();
+            loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
 
             var isSignInButtonDisplayedCollection = _driver.FindElements(By.ClassName("authorization-link")).Select(i => i.Displayed);
 
@@ -153,15 +148,8 @@ namespace UITesting.Tests
             IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
             signInButton.Click();
 
-            IWebElement emailInput = _driver.FindElement(By.Id("email"));
-            IWebElement passwordInput = _driver.FindElement(By.Name("login[password]"));
-
-            emailInput.SendKeys("isaacamortegc@outlook.com");
-            passwordInput.SendKeys("Boeing787");
-
-            IWebElement signInButtonLoginPage = _driver.FindElement(By.Id("send2"));
-
-            signInButtonLoginPage.Click();
+            var loginPage = new LoginPage(_driver);
+            loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
 
             WebDriverWait waitGearButton = new WebDriverWait(_driver, TimeSpan.FromSeconds(3));
             waitGearButton.Until(ExpectedConditions.ElementExists(By.Id("ui-id-6")));

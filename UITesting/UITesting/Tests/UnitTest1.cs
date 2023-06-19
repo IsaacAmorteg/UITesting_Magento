@@ -7,8 +7,9 @@ using SeleniumExtras.WaitHelpers;
 using System;
 using System.Numerics;
 using System.Xml.Linq;
+using UITesting.Pages;
 
-namespace UITesting
+namespace UITesting.Tests
 {
     public class Tests
     {
@@ -39,6 +40,7 @@ namespace UITesting
             Assert.AreEqual(expectedTitle, _driver.Title);
 
         }
+
         [TestCase("https://magento.softwaretestingboard.com/")]
         [TestCase("https://magento.softwaretestingboard.com/gear.html")]
         public void BasePageOpened_SignIn_WelcomeMessageIsDisplayed(string url)
@@ -50,54 +52,45 @@ namespace UITesting
             IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
             signInButton.Click();
 
-            IWebElement emailInput = _driver.FindElement(By.Id("email"));
-            IWebElement passwordInput = _driver.FindElement(By.Name("login[password]"));
-
-            emailInput.SendKeys("isaacamortegc@outlook.com");
-            passwordInput.SendKeys("Boeing787");
-
-            IWebElement signInButtonLoginPage = _driver.FindElement(By.Id("send2"));
-
-            signInButtonLoginPage.Click();
-
-            var expected = "Welcome, Isaac Amortegui!";
-
+            var loginPage = new LoginPage(_driver);
+            loginPage.EnterEmail("isaacamortegc@outlook.com");
+            loginPage.EnterPassword("Boeing787");
+            loginPage.ClickSignInButtonLogin();                       
+            
             WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
-            wait.Until(ExpectedConditions.TextToBePresentInElementLocated(By.ClassName("logged-in"), expected));
+
+            wait.Until((driver) => driver.FindElement(By.ClassName("logged-in")).Text.StartsWith("Welcome, "));
 
             IWebElement welcomeMessage = _driver.FindElement(By.ClassName("logged-in"));
 
             //Assert
-            var actual = welcomeMessage.Text;            
+            var actual = welcomeMessage.Text;
+            var expected = "Welcome, Isaac Amortegui!";
 
             Assert.AreEqual(expected, actual);
-                       
+
         }
 
         [Test]
-        
+
         public void BasePageOpened_TrySignInWithNoPassword_ErrorMessageIsDisplayed()
         {
             //Precondition
             _driver.Navigate().GoToUrl(_baseUrl);
 
             //Action
-            IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
-            signInButton.Click();
+            IWebElement signInButtonMainPage = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
+            signInButtonMainPage.Click();
 
-            IWebElement emailInput = _driver.FindElement(By.Id("email"));
-            IWebElement passwordInput = _driver.FindElement(By.Name("login[password]"));
+            var loginPage = new LoginPage(_driver);
+            loginPage.EnterEmail("isaacamortegc@outlook.com");
 
-            emailInput.SendKeys("isaacamortegc@outlook.com");
-           
-            IWebElement signInButtonLoginPage = _driver.FindElement(By.Id("send2"));
-
-            signInButtonLoginPage.Click();                      
+            loginPage.ClickSignInButtonLogin();
 
             IWebElement errorMessage = _driver.FindElement(By.ClassName("fieldset"));
 
             //Assert
-                       
+
             var actual = errorMessage.GetAttribute("data-hasrequired");
             var expected = "* Required Fields";
 
@@ -115,20 +108,15 @@ namespace UITesting
             IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
             signInButton.Click();
 
-            IWebElement emailInput = _driver.FindElement(By.Id("email"));
-            IWebElement passwordInput = _driver.FindElement(By.Name("login[password]"));
-
-            emailInput.SendKeys("isaacamortegc@outlook.com");
-            passwordInput.SendKeys("Boeing787");
-
-            IWebElement signInButtonLoginPage = _driver.FindElement(By.Id("send2"));
-
-            signInButtonLoginPage.Click();
+            var loginPage = new LoginPage(_driver);
+            loginPage.EnterEmail("isaacamortegc@outlook.com");
+            loginPage.EnterPassword("Boeing787");
+            loginPage.ClickSignInButtonLogin();
 
             var isSignInButtonDisplayedCollection = _driver.FindElements(By.ClassName("authorization-link")).Select(i => i.Displayed);
 
             //Assert
-            Assert.IsFalse(isSignInButtonDisplayedCollection.Distinct().Single());                             
+            Assert.IsFalse(isSignInButtonDisplayedCollection.Distinct().Single());
 
         }
         [Test]
@@ -140,7 +128,7 @@ namespace UITesting
             //Action
             WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
             wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).Count == 4);
-            wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).All(i =>i.Text != string.Empty));
+            wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).All(i => i.Text != string.Empty));
             IEnumerable<IWebElement> productNameCollection = _driver.FindElements(By.ClassName("product-item-link"));
             var actual = productNameCollection.Select(i => i.Text);
             var expected = new[]
@@ -154,7 +142,7 @@ namespace UITesting
             //Assert
             Assert.AreEqual(expected, actual);
         }
-        
+
         [Test]
         public void Scenario1()
         {
@@ -182,7 +170,7 @@ namespace UITesting
 
             Actions actions = new Actions(_driver);
 
-            actions.MoveToElement(gearButtonDropDownMenu).Perform();                 
+            actions.MoveToElement(gearButtonDropDownMenu).Perform();
 
             IWebElement watchesButtonByGearDropDownMenu = _driver.FindElement(By.XPath(".//a[@id= 'ui-id-27']"));
             watchesButtonByGearDropDownMenu.Click();
@@ -196,7 +184,7 @@ namespace UITesting
 
             //Keep below Thread Sleep until fixing below Commented Explicit waiter.
             Thread.Sleep(TimeSpan.FromSeconds(3));
-           // WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
+            // WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
             //wait.Until(ExpectedConditions.ElementExists(By.ClassName("minicart-wrapper")));
 
             IWebElement showMiniCartCheckoutButton = _driver.FindElement(By.ClassName("minicart-wrapper"));
@@ -210,7 +198,7 @@ namespace UITesting
 
             WebDriverWait waitNext = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
             waitNext.Until(ExpectedConditions.ElementExists(By.XPath(".//button[contains(span/@data-bind, 'Next')]")));
-           
+
             bool isNewAddressButtonPresent = _driver.FindElements(By.XPath(".//button[contains(span/@data-bind, 'New Address')]")).Count > 0;
 
             if (isNewAddressButtonPresent)
@@ -221,14 +209,14 @@ namespace UITesting
 
 
             IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
-            IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));            
+            IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));
             IWebElement streetInput = _driver.FindElement(By.CssSelector("input[name='street[0]']"));
-            IWebElement cityInput = _driver.FindElement(By.CssSelector("input[name='city']"));            
-            IWebElement countryInput = _driver.FindElement(By.CssSelector("select[name='country_id']"));            
+            IWebElement cityInput = _driver.FindElement(By.CssSelector("input[name='city']"));
+            IWebElement countryInput = _driver.FindElement(By.CssSelector("select[name='country_id']"));
             SelectElement selectCountry = new SelectElement(countryInput);
             IWebElement zipPostalCodeInput = _driver.FindElement(By.CssSelector("input[name ='postcode']"));
             IWebElement phoneInput = _driver.FindElement(By.CssSelector("input[name='telephone']"));
-                               
+
             firstNameInput.Clear();
             firstNameInput.SendKeys("Isaac");
 
@@ -252,7 +240,7 @@ namespace UITesting
             {
                 phoneNumber += random.Next(0, 10).ToString();
             }
-            phoneInput.Clear();            
+            phoneInput.Clear();
             phoneInput.SendKeys(phoneNumber);
 
             bool isShipHereButtonPresent = _driver.FindElements(By.XPath(".//footer//span[contains(text(), 'Ship here')]")).Count > 0;
@@ -261,9 +249,9 @@ namespace UITesting
             {
                 IWebElement shipHereButton = _driver.FindElement(By.XPath(".//footer//span[contains(text(), 'Ship here')]"));
                 shipHereButton.Click();
-                
+
             }
-            
+
             IWebElement nextButton = _driver.FindElement(By.XPath(".//button[contains(span/@data-bind, 'Next')]"));
             nextButton.Click();
 
@@ -322,7 +310,7 @@ namespace UITesting
         }
 
         [Test]
-        public void Scenario2() 
+        public void Scenario2()
         {
             //Precondition
             _driver.Navigate().GoToUrl(_baseUrl);
@@ -333,7 +321,7 @@ namespace UITesting
 
             IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
             IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));
-           
+
             IWebElement passwordInput = _driver.FindElement(By.CssSelector("input[name = 'password']"));
             IWebElement passwordConfirmInput = _driver.FindElement(By.CssSelector("input[name='password_confirmation']"));
             IWebElement createAccountButtonInRegistrationPage = _driver.FindElement(By.CssSelector("button[title='Create an Account']"));
@@ -349,8 +337,8 @@ namespace UITesting
             IWebElement errorMessage = _driver.FindElement(By.XPath($".//div[@class='mage-error' and contains(text(), '{expectedErrorMessage}')]"));
             var actualErrorMessage = errorMessage.Text;
 
-            Assert.AreEqual(expectedErrorMessage, actualErrorMessage);          
-                        
+            Assert.AreEqual(expectedErrorMessage, actualErrorMessage);
+
         }
 
 

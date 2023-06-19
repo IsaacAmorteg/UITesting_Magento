@@ -5,6 +5,7 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
+using System.Numerics;
 using System.Xml.Linq;
 
 namespace UITesting
@@ -24,7 +25,7 @@ namespace UITesting
 
             _driver = new ChromeDriver(options);
 
-            _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(3);
+            _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
 
             _driver.Manage().Window.Maximize();
         }
@@ -38,11 +39,12 @@ namespace UITesting
             Assert.AreEqual(expectedTitle, _driver.Title);
 
         }
-        [Test]
-        public void BasePageOpened_SignIn_WelcomeMessageIsDisplayed()
+        [TestCase("https://magento.softwaretestingboard.com/")]
+        [TestCase("https://magento.softwaretestingboard.com/gear.html")]
+        public void BasePageOpened_SignIn_WelcomeMessageIsDisplayed(string url)
         {
             //Precondition
-            _driver.Navigate().GoToUrl(_baseUrl);
+            _driver.Navigate().GoToUrl(url);
 
             //Action
             IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
@@ -70,6 +72,37 @@ namespace UITesting
 
             Assert.AreEqual(expected, actual);
                        
+        }
+
+        [Test]
+        
+        public void BasePageOpened_TrySignInWithNoPassword_ErrorMessageIsDisplayed()
+        {
+            //Precondition
+            _driver.Navigate().GoToUrl(_baseUrl);
+
+            //Action
+            IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
+            signInButton.Click();
+
+            IWebElement emailInput = _driver.FindElement(By.Id("email"));
+            IWebElement passwordInput = _driver.FindElement(By.Name("login[password]"));
+
+            emailInput.SendKeys("isaacamortegc@outlook.com");
+           
+            IWebElement signInButtonLoginPage = _driver.FindElement(By.Id("send2"));
+
+            signInButtonLoginPage.Click();                      
+
+            IWebElement errorMessage = _driver.FindElement(By.ClassName("fieldset"));
+
+            //Assert
+                       
+            var actual = errorMessage.GetAttribute("data-hasrequired");
+            var expected = "* Required Fields";
+
+            Assert.AreEqual(expected, actual);
+
         }
 
         [Test]
@@ -105,7 +138,8 @@ namespace UITesting
             _driver.Navigate().GoToUrl(_gearPageUrl);
 
             //Action
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(2));
+            wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).Count == 4);
             wait.Until(driver => driver.FindElements(By.ClassName("product-item-link")).All(i =>i.Text != string.Empty));
             IEnumerable<IWebElement> productNameCollection = _driver.FindElements(By.ClassName("product-item-link"));
             var actual = productNameCollection.Select(i => i.Text);

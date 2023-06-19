@@ -16,6 +16,9 @@ namespace UITesting.Pages
         private By _miniCart = By.ClassName("minicart-wrapper");
         private By _proceedToCheckoutFromMiniCart = By.Id("top-cart-btn-checkout");
         private By _hotSellersLocator = By.ClassName("product-item-link");
+        private By _bagsCategoryLocator = By.XPath(".//a[contains(text(), 'Bags')]");
+        private By _addToCartProductPage = By.Id("product-addtocart-button");
+        private By _counterNumberLocator = By.ClassName("counter-number");
         public ProductCategoryPage(IWebDriver driver) : base(driver)
         {
         }
@@ -40,11 +43,18 @@ namespace UITesting.Pages
             IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)Driver;
             jsExecutor.ExecuteScript("arguments[0].click();", addToCartButton);
         }
+        public void AddToCartFromProductPage()
+        {
+            WebDriverWait wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(2));
+            wait.Until(ExpectedConditions.ElementToBeClickable(_addToCartProductPage));
+
+            Driver.FindElement(_addToCartProductPage).Click();
+        }
 
         public void OpenMiniCart()
         {
-            IWebElement showMiniCartCheckoutButton = Driver.FindElement(_miniCart);
-            showMiniCartCheckoutButton.Click();
+            Driver.FindElement(_miniCart).Click();
+            
         }
         public void ProceedToCheckOutFromMiniCart()
         {
@@ -53,6 +63,15 @@ namespace UITesting.Pages
 
             IWebElement proceedToCheckoutButton = Driver.FindElement(_proceedToCheckoutFromMiniCart);
             proceedToCheckoutButton.Click();
+        }
+        public void OpenBagsPage()
+        {
+            Driver.FindElement(_bagsCategoryLocator).Click();
+        }
+        public string GetMiniCartCounter()
+        {
+            return Driver.FindElement(_counterNumberLocator).Text;
+
         }
     }
 }

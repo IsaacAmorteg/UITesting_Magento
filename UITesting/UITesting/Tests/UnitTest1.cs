@@ -227,25 +227,47 @@ namespace UITesting.Tests
             mainPage.OpenCreateAccountPage();
 
             //Action
-            IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
-            IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));
-
-            IWebElement passwordInput = _driver.FindElement(By.CssSelector("input[name = 'password']"));
-            IWebElement passwordConfirmInput = _driver.FindElement(By.CssSelector("input[name='password_confirmation']"));
-            IWebElement createAccountButtonInRegistrationPage = _driver.FindElement(By.CssSelector("button[title='Create an Account']"));
-
-            firstNameInput.SendKeys("Charlie");
-            lastNameInput.SendKeys("Great");
-            passwordInput.SendKeys("Test123Test");
-            passwordConfirmInput.SendKeys("Test123Test");
-            createAccountButtonInRegistrationPage.Click();
+            var createAnAccountPage = new CreateAccountPage(_driver);
+            createAnAccountPage.CreateAnAccount("Charlie", "Great", "Test123Test");
 
             //Assertion
             var expectedErrorMessage = "This is a required field.";
-            IWebElement errorMessage = _driver.FindElement(By.XPath($".//div[@class='mage-error' and contains(text(), '{expectedErrorMessage}')]"));
-            var actualErrorMessage = errorMessage.Text;
+            var actualErrorMessage = createAnAccountPage.GetErrorMessage(expectedErrorMessage);
 
             Assert.AreEqual(expectedErrorMessage, actualErrorMessage);
+
+        }
+
+        [Test]
+        public void Scenario3()
+        {
+            //Precondition
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenSignInPage();
+
+            var loginPage = new LoginPage(_driver);
+            loginPage.Login("moderya7@gmail.com", "test_password1");
+
+            //Action
+            mainPage.OpenGearCategoryPage();
+
+            var gearCategoryPage = new ProductCategoryPage(_driver);
+            gearCategoryPage.OpenBagsPage();
+
+            var bagsPage = new BagsPage(_driver);
+            bagsPage.AddFirstTwoProductsAndOpenThirdProductPage();
+
+            var backpackProductPage = new ProductCategoryPage(_driver);
+            backpackProductPage.AddToCartFromProductPage();
+
+            //Below should be removed
+            Thread.Sleep(TimeSpan.FromSeconds(4));
+
+            //Assertion
+
+            var actual = backpackProductPage.GetMiniCartCounter();
+            var expected = "3";
+            Assert.AreEqual(expected, actual);
 
         }
 

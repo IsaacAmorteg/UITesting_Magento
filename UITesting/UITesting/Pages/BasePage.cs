@@ -42,6 +42,11 @@ namespace UITesting.Pages
         {
             Driver.FindElement(_myAccountButton).Click();
         }
+        public void OpenGearCategoryPage()
+        {
+            Driver.FindElement(_gearCategoryButtonLocator).Click();          
+
+        }
 
 
         public void  MoveToGearDropDownMenu()

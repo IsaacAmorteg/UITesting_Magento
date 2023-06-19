@@ -49,8 +49,8 @@ namespace UITesting.Tests
             _driver.Navigate().GoToUrl(url);
 
             //Action
-            IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
-            signInButton.Click();
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenSignInButton();
 
             var loginPage = new LoginPage(_driver);
             loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
@@ -77,8 +77,8 @@ namespace UITesting.Tests
             _driver.Navigate().GoToUrl(_baseUrl);
 
             //Action
-            IWebElement signInButtonMainPage = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
-            signInButtonMainPage.Click();
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenSignInButton();
 
             var loginPage = new LoginPage(_driver);
             loginPage.EnterEmail("isaacamortegc@outlook.com");
@@ -102,8 +102,8 @@ namespace UITesting.Tests
             _driver.Navigate().GoToUrl(_baseUrl);
 
             //Action
-            IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
-            signInButton.Click();
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenSignInButton();
 
             var loginPage = new LoginPage(_driver);
             loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
@@ -145,8 +145,8 @@ namespace UITesting.Tests
             _driver.Navigate().GoToUrl(_baseUrl);
 
             //Action
-            IWebElement signInButton = _driver.FindElement(By.XPath(".//li[@class='authorization-link']"));
-            signInButton.Click();
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenSignInButton();
 
             var loginPage = new LoginPage(_driver);
             loginPage.Login("isaacamortegc@outlook.com", "Boeing787");
@@ -304,8 +304,8 @@ namespace UITesting.Tests
             _driver.Navigate().GoToUrl(_baseUrl);
 
             //Action
-            IWebElement createAnAccountButton = _driver.FindElement(By.XPath(".//li/a[contains(text(), 'Create an Account')]"));
-            createAnAccountButton.Click();
+            var mainPage = new MainPage(_driver);
+            mainPage.OpenCreateAccountButton();
 
             IWebElement firstNameInput = _driver.FindElement(By.CssSelector("input[name='firstname']"));
             IWebElement lastNameInput = _driver.FindElement(By.CssSelector("input[name='lastname']"));

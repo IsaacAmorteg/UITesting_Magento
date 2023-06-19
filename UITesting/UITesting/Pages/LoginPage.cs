@@ -13,8 +13,7 @@ namespace UITesting.Pages
         private By _passwordInput = By.Name("login[password]");
         private By _signInButtonLogin = By.Id("send2");
         private By _errorMessage = By.ClassName("fieldset");
-        private By _welcomeMessage = By.ClassName("logged-in");
-
+       
         public IWebDriver Driver;
 
         public LoginPage(IWebDriver driver)
@@ -55,15 +54,6 @@ namespace UITesting.Pages
             return errorMesage.GetAttribute("data-hasrequired");
 
         }
-
-       /*  Commented for later use or move to another class.
-        *  
-        *  
-         public string GetWelcomeMessage()
-        {
-            IWebElement welcomeMessage = Driver.FindElement(_welcomeMessage);
-            return welcomeMessage.Text;
-        }
-       */
+       
     }
 }
